@@ -3,8 +3,11 @@ import time
 import speech_recognition as sr
 import numpy as np
 import ctypes
+from icrawler.builtin import GoogleImageCrawler
+import os
+from PIL import Image
 
-class ImageGenerator:
+class ImageGeneratorCV:
     def __init__(self):
         self.screen_width = None
         self.screen_height = None
@@ -65,19 +68,42 @@ class ImageGenerator:
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    def run(self):
+
+class ImageDownloader():
+    def __init__(self):
+        pass
+
+    def Fdescargar_imagenes(self, text_busqueda):
+        tema_de_imagenes = text_busqueda
+        print("¿Cuántas imágenes quieres sobre el tema?, por favor dí solo el número")
+        
+        # esto designa donde se van a guardar las imagenes descargadas por la asistente
+        google_crawler = GoogleImageCrawler(
+            storage={'root_dir': os.getcwd() + '\imagenes descargadas\imagenes de ' + tema_de_imagenes})
+        google_crawler.crawl(keyword = tema_de_imagenes, max_num = 1)
+        print("imágenes descargadas")
+    
+
+
+if __name__ == "__main__":
+    generator = ImageGeneratorCV()
+
+
+    crear = False #si esto está en true creará una imagen con texto usando open cv, en otro caso descargará las imagenes de google 
+    def run():
         # Configura el reconocimiento de voz
         r = sr.Recognizer()
         mic = sr.Microphone()
-
-        # Inicializa la pantalla
-        self.initialize_screen()
+        
+        if crear == True:
+            # Inicializa la pantalla
+            generator.initialize_screen()
 
         # Inicia la escucha continua
         with mic as source:
-            print("Escuchando...")
 
             while True:
+                print("Escuchando...")
                 try:
                     # Escucha el audio desde el micrófono
                     audio = r.listen(source)
@@ -88,11 +114,21 @@ class ImageGenerator:
                     # Muestra el texto reconocido
                     print("Texto reconocido:", text)
 
-                    # Genera una imagen basada en el texto
-                    img = self.generate_image(text)
+                    if crear == True:
+                        # Genera una imagen basada en el texto
+                        img = generator.generate_image(text)
 
-                    # Muestra la imagen generada
-                    self.show_image(img)
+                        # Muestra la imagen generada
+                        generator.show_image(img)
+                    else: 
+                        #descarga la imagen
+                        ImageDownloader().Fdescargar_imagenes(text)
+
+                        # Muestra la imagen descargada
+                        im = Image.open(os.getcwd() + '\imagenes descargadas\imagenes de ' + text +"/000001.jpg")
+                        
+                        im.show()
+                        print("imagen mostrada")
 
                 except sr.UnknownValueError:
                     print("No se pudo reconocer el audio")
@@ -100,9 +136,28 @@ class ImageGenerator:
                     print("Error en la solicitud de reconocimiento de voz:", str(e))
 
                 # Tiempo de espera entre cada generación de imágenes
+                print("esperando")
                 time.sleep(5)
+                print("reanudando")
 
 
-if __name__ == "__main__":
-    generator = ImageGenerator()
-    generator.run()
+
+    run()
+
+    # imagen = cv2.imread(os.getcwd() + '\imagenes descargadas\imagenes de ' + "un dragón/000001.jpg") 
+    # cv2.imshow('Logo OpenCV', imagen)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+    # from skimage import io
+    # import matplotlib.pyplot  as plt
+
+
+    # image=io.imread(os.getcwd() + '\imagenes descargadas\imagenes de ' + "un dragón/000001.jpg")/255.0 # imread lee las imagenes con los pixeles codificados como enteros 
+    # # en el rango 0-255. Por eso la convertimos a flotante y en el rango 0-1
+
+    # print("- Dimensiones de la imagen:")
+    # print(image.shape)
+    # plt.imshow(image,vmin=0,vmax=1)
+
+    

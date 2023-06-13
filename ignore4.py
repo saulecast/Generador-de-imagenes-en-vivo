@@ -3,7 +3,7 @@ from PIL import Image
 
 def descargar_imagen_google(query):
     response = google_images_download.googleimagesdownload()
-    arguments = {"keywords": query, "limit":4}
+    arguments = {"keywords": query, "limit":1}
     paths = response.download(arguments)
     if paths:
         img = Image.open(paths[0][query][0])
@@ -11,7 +11,7 @@ def descargar_imagen_google(query):
     else:
         print("No se encontraron imágenes para la consulta:", query)
 
-descargar_imagen_google("un dragon")
+descargar_imagen_google("chris evans")
 
 # import requests
 # from io import BytesIO
