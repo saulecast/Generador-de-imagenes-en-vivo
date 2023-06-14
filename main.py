@@ -84,32 +84,25 @@ class ImageDownloader():
         print("imágenes descargadas")
     
 
-
-if __name__ == "__main__":
-    generator = ImageGeneratorCV()
-
-
-    crear = False #si esto está en true creará una imagen con texto usando open cv, en otro caso descargará las imagenes de google 
-    def run():
+class Escucha():
+    def __init__(self) -> None:
         # Configura el reconocimiento de voz
-        r = sr.Recognizer()
-        mic = sr.Microphone()
-        
-        if crear == True:
-            # Inicializa la pantalla
-            generator.initialize_screen()
+        self.broca = sr.Recognizer()
+        self.mic = sr.Microphone()
 
-        # Inicia la escucha continua
-        with mic as source:
+    #Su capacidad para escuchar es esta función
+    def escuchar(self):    
+        with self.mic as oido:
 
             while True:
                 print("Escuchando...")
                 try:
                     # Escucha el audio desde el micrófono
-                    audio = r.listen(source)
+                    audio = self.broca.listen(oido, phrase_time_limit= 10, timeout = 10)
 
                     # Utiliza el reconocimiento de voz para obtener el texto
-                    text = r.recognize_google(audio, language="es-ES")
+                    print("Procesando...")
+                    text = self.broca.recognize_google(audio, language="es-ES")
 
                     # Muestra el texto reconocido
                     print("Texto reconocido:", text)
@@ -125,7 +118,10 @@ if __name__ == "__main__":
                         ImageDownloader().Fdescargar_imagenes(text)
 
                         # Muestra la imagen descargada
-                        im = Image.open(os.getcwd() + '\imagenes descargadas\imagenes de ' + text +"/000001.jpg")
+                        try:
+                            im = Image.open(os.getcwd() + '\imagenes descargadas\imagenes de ' + text +"/000001.jpg")
+                        except Exception as ex:
+                            print("No se pudo mostrar la imagen. Error:\n" + ex)
                         
                         im.show()
                         print("imagen mostrada")
@@ -140,6 +136,55 @@ if __name__ == "__main__":
                 time.sleep(5)
                 print("reanudando")
 
+
+    def oir_pasivamente(self):
+        with self.mic as oido:
+            print("Oyendo...")
+            # audio = self.broca.listen(oido)
+            audio = self.broca.record(oido, duration = 5)  # Graba el audio sin analizarlo y se detiene cada 5 segundos
+            print("Procesando datos...") # Solo avisa de la pausa para analizar datos
+            palabra = ""
+            try:
+                palabra = self.broca.recognize_google(audio, language = "es-ES")
+            except sr.UnknownValueError:
+                print("no entiende el audio")
+            except sr.RequestError as ex:
+                print("Request error (problemas al conectarme): "+ str(ex) )
+            except RuntimeError:
+                print( "RuntimeError: Demasiado tiempo escuchando")
+            except ConnectionResetError as ex:
+                print("ConnectionResetError (el host remoto a detenido tu conexión): "+ str (ex) ) 
+        print(palabra)
+        return palabra
+
+    def calibrar_para_ruido_ambiental(self):
+        with self.mic as oido:              
+            self.broca.adjust_for_ambient_noise(oido)         # escucha por 1 segundo para calcular los limites energeticos (energy threshold) del ruido ambiental... Esta linea es lo que realmente importa de esta función
+            print("Mi oido se ha adaptado al ruido ambiental, para comprobarlo puedes decirme una oración compleja")
+            
+            print("escuchando...")
+            audio = self.broca.listen(oido)                   # ahora escuchamos audio para probar que se ha calibrado
+
+        try:
+            print("Dijiste " + self.broca.recognize(audio))
+            
+        except LookupError:                            # el audio es ininteligible
+            print("No entendí el audio")
+            
+
+
+if __name__ == "__main__":
+    generator = ImageGeneratorCV()
+
+
+    crear = False #si esto está en true creará una imagen con texto usando open cv, en otro caso descargará las imagenes de google 
+    def run():
+        
+        if crear == True:
+            # Inicializa la pantalla
+            generator.initialize_screen()
+
+        Escucha().escuchar()
 
 
     run()
